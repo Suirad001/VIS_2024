@@ -9,7 +9,10 @@ f.close()
 currentBlockType = ""
 currentTextBlock = []
 listOfMbsObjects = []
+# Anlegen der Liste für die Schlagwörter
 search4Objects  = ["RIGID_BODY", "CONSTRAINT"]
+
+# Schleife für des Suchen der Schlagwörter
 for line in fileContent:
     if(line.find("$") >= 0):#new block found
         if(currentBlockType != ""):
