@@ -18,26 +18,18 @@ class Model:
 class SingleMassOscillator(Model):
     def __init__(self, iniState, m, k, d, F):
         super().__init__(iniState)
-        #your implementation here
-        self.__m__ = m
-        self.__k__ = k
-        self.__d__ =  2*d*np.sqrt(self.__m__*self.__k__) 
-        self.__f__= F
+        self.__m__ = m  # Mass
+        self.__k__ = k  # Stiffness
+        self.__d__ = 2*d*np.sqrt(self.__m__*self.__k__)  # Damping
 
     def dydt(self, t):
-        """Berechnet die Ableitungen von Position und Geschwindigkeit."""
+        """Compute the derivatives of the state (velocity and acceleration)."""
         position = self.state[0]
         velocity = self.state[1]
         
-        # Beschleunigung aus der Bewegungsgleichung
-        acceleration =self.__f__/self.__m__ - (self.__k__ / self.__m__) * position - (self.__d__ / self.__m__) * velocity
+        # Equation of motion: 
+        acceleration = (-self.__k__ / self.__m__) * position - (self.__d__ / self.__m__) * velocity
         
-        # Rückgabe von Geschwindigkeit und Beschleunigung als Array
-        return np.array([velocity, acceleration])
         
-        # Rückgabe von Geschwindigkeit und Beschleunigung als Array
-        return np.array([velocity, acceleration])
-
         return np.array([velocity, acceleration]) 
-        #----------------------------------------------------------------------------
 
