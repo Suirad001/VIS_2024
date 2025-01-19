@@ -22,7 +22,7 @@ QVTKRenderWindowInteractor = QVTK.QVTKRenderWindowInteractor
 class MainWindow(QMainWindow):
     def __init__(self):
         """Initialisiert das Hauptfenster der Anwendung."""
-        super().__init__()
+        super().__init__() # Ruft den Konstruktor der Elternklasse auf
 
         # Initialisiere das Modell
         self.myModel = None  # Anfangs kein Modell geladen
@@ -62,7 +62,7 @@ class MainWindow(QMainWindow):
         # Füge die Strukturbaumdaten hinzu (dies muss nach dem Laden des Modells geschehen)
         self.add_structure_tree()
 
-        # **Setze eine Startbreite von 200 Pixel für den Baum**
+        # **Setze eine Startbreite von 100 Pixel für den Baum**
         self.initial_tree_width = 100  # Startbreite für den Baum
         
         self.treeView.setMinimumWidth(80)  # Mindestbreite setzen
@@ -171,36 +171,21 @@ class MainWindow(QMainWindow):
         
         if filename:
             if filename.lower().endswith(".json"):  # Überprüfe, ob die Datei eine JSON-Datei ist
-                self.load_json_model(filename)
+                """""Lädt das Modell aus einer json-Datei."""
+                try:
+                    self.myModel = mbsModel.mbsModel()  # Erstelle ein neues Modell
+                    print(f"Lade Modell aus Datei: {filename}")
+                    self.myModel.loadDatabase(Path(filename))  # Lade das Modell aus der JSON-Datei
+                    self.statusBar().showMessage(f"Modell geladen: {filename}")
+                    self.widget.update_renderer(self.myModel)  # Aktualisiere das Rendering mit dem neuen Modell
+                    self.add_structure_tree()  # Hier den Strukturbaum hinzufügen, nach dem Modell laden
+                except Exception as e:
+                    self.statusBar().showMessage(f"Fehler beim Laden des Modells: {e}")
+                    print(f"Fehler beim Laden des Modells: {e}")
             else:
                 self.show_error_message("Ungültige Datei", "Bitte wählen Sie eine gültige JSON-Datei aus.")
         else:
             self.statusBar().showMessage("Modell-Laden abgebrochen")
-
-# ===================================================================================================  
-
-    def load_json_model(self, filename):
-        """Lädt das Modell aus einer JSON-Datei und zeigt es im VTK-Renderer."""
-        try:
-            self.myModel = mbsModel.mbsModel()  # Erstelle ein neues Modell
-            print(f"Lade Modell aus Datei: {filename}")
-            self.myModel.loadDatabase(Path(filename))  # Lade das Modell aus der JSON-Datei
-            self.statusBar().showMessage(f"Modell geladen: {filename}")
-            self.widget.update_renderer(self.myModel)  # Aktualisiere das Rendering mit dem neuen Modell
-            self.add_structure_tree()  # Hier den Strukturbaum hinzufügen, nach dem Modell laden
-        except Exception as e:
-            self.statusBar().showMessage(f"Fehler beim Laden des Modells: {e}")
-            print(f"Fehler beim Laden des Modells: {e}")
-            
-# ===================================================================================================  
-
-    def save_model(self):
-        """Speichert das Modell in einer JSON-Datei."""
-        options = QFileDialog.Options()
-        filename, _ = QFileDialog.getSaveFileName(self, "Save Model File", "", "JSON Files (*.json)", options=options)
-        if filename:
-            self.myModel.saveDatabase(Path(filename))  # Speichert das Modell
-            self.statusBar().showMessage(f"Modell gespeichert: {filename}")
             
 # ===================================================================================================  
 
@@ -211,7 +196,15 @@ class MainWindow(QMainWindow):
 
         if filename:
             if filename.lower().endswith(".fdd"):  # Überprüfe, ob die Datei eine Fdd-Datei ist
-                self.import_fdd_file(Path(filename))
+                """""Lädt das Modell aus einer FDD-Datei."""
+                try:
+                    self.myModel = mbsModel.mbsModel()
+                    self.myModel.importFddFile(filename)
+                    self.statusBar().showMessage(f"FDD-Datei importiert: {filename}")
+                    self.widget.update_renderer(self.myModel)
+                    self.add_structure_tree()  # Hier den Strukturbaum hinzufügen, nach dem Modell laden
+                except Exception as e:
+                    self.statusBar().showMessage(f"Fehler beim Importieren der FDD-Datei: {e}")
             else:
                 self.show_error_message("Ungültige Datei", "Bitte wählen Sie eine gültige Fdd-Datei aus.")
         else:
@@ -219,17 +212,14 @@ class MainWindow(QMainWindow):
             
 # ===================================================================================================  
 
-    def import_fdd_file(self, filename):
-        """Lädt das Modell aus einer FDD-Datei."""
-        try:
-            self.myModel = mbsModel.mbsModel()
-            self.myModel.importFddFile(filename)
-            self.statusBar().showMessage(f"FDD-Datei importiert: {filename}")
-            self.widget.update_renderer(self.myModel)
-            self.add_structure_tree()  # Hier den Strukturbaum hinzufügen, nach dem Modell laden
-        except Exception as e:
-            self.statusBar().showMessage(f"Fehler beim Importieren der FDD-Datei: {e}")
-            
+    def save_model(self):
+        """Speichert das Modell in einer JSON-Datei."""
+        options = QFileDialog.Options()
+        filename, _ = QFileDialog.getSaveFileName(self, "Save Model File", "", "JSON Files (*.json)", options=options)
+        if filename:
+            self.myModel.saveDatabase(Path(filename))  # Speichert das Modell
+            self.statusBar().showMessage(f"Modell gespeichert: {filename}")
+
 # ===================================================================================================  
 
     def show_error_message(self, title, message):
@@ -240,7 +230,8 @@ class MainWindow(QMainWindow):
         msg_box.setText(message)
         msg_box.exec()
         
-# ===================================================================================================  
+# =================================================================================================== 
+    """Funktionen für die Unterpunkte von view""" 
 
     def set_front_view(self):
         """Setzt die Kamera in die Frontansicht."""
@@ -251,7 +242,7 @@ class MainWindow(QMainWindow):
         self.widget.renderer.ResetCamera()  # Stellt sicher, dass das gesamte Modell sichtbar ist
         self.widget.GetRenderWindow().Render()  # Szene neu rendern
         
-# ===================================================================================================  
+    # ===================================================================================================  
 
     def set_top_view(self):
         """Setzt die Kamera in die Draufsicht."""
@@ -262,7 +253,7 @@ class MainWindow(QMainWindow):
         self.widget.renderer.ResetCamera()  # Stellt sicher, dass das gesamte Modell sichtbar ist
         self.widget.GetRenderWindow().Render()  # Szene neu rendern
         
-# ===================================================================================================  
+    # ===================================================================================================  
 
     def set_rigth_view(self):
         """Setzt die Kamera in die Draufsicht."""
