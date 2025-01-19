@@ -90,16 +90,23 @@ class MainWindow(QMainWindow):
         # Initialisiere das RenderWindow
         self.widget.GetRenderWindow().Render()
 
-# ===================================================================================================    
- #Erstellen der Menübar und Befüllen 
+# =======================================================================================================   
 
     def create_menu(self):
+        # Erstellen der Menübar und Befüllen
         """Erstellt die Menüleiste und ihre Aktionen."""
-        menubar = self.menuBar()
-        
-        # Menü unterpunkt File hinzugefügt
-        file_menu = menubar.addMenu('File')
-        
+        menubar = self.menuBar() # Anlegen der Menüleiste
+
+    # ===================================================================================================
+    # Anlegen der Hauptpunkte in der Menüleiste
+
+        file_menu = menubar.addMenu('File') # Menü Hauptpunkt File hinzugefügt
+        view_menu = menubar.addMenu('View') # Menü Hauptpunkt View hinzugefügt
+        settings_menu = menubar.addMenu('Einstellungen') # Menü Hauptpunkt Einstellungen hinzugefügt
+
+    # ===================================================================================================
+    # Anlegen der Unterpunkte in File
+
         # 'Load' Aktion hinzufügen
         load_action = QAction('Load', self)
         load_action.triggered.connect(self.load_model)
@@ -120,8 +127,8 @@ class MainWindow(QMainWindow):
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
 
-        # Menü Unterpunkt view hinzugefügt
-        view_menu = menubar.addMenu('view')
+    # ==================================================================================================
+    # Unterpunkte von View anlegen
 
         # Front Ansicht hinzufügen
         front_action = QAction('Front Ansicht', self)
@@ -138,11 +145,14 @@ class MainWindow(QMainWindow):
         top_action.triggered.connect(self.set_rigth_view)  # Verknüpfe die Aktion mit einer Methode
         view_menu.addAction(top_action)
 
-        # Menü unterpunkt Einstellungen hinzugefügt
-        settings_menu = menubar.addMenu('Einstellungen')
+    # ==================================================================================================
+    # Unterpunkte von Einstellungen anlegen
 
         # Steuerung Untermenü hinzufügen
         steuerung_menu = QMenu("Steuerung", self)
+
+        # ==============================================================================================
+        # Unterpunkte von Steuerung
 
         # 'Steuerung Abaqus' hinzufügen
         abaqus_action = QAction('Steuerung Abaqus', self)
@@ -157,7 +167,7 @@ class MainWindow(QMainWindow):
         settings_menu.addMenu(steuerung_menu)
 
 # ===================================================================================================  
-
+ 
     def create_status_bar(self):
         """Erstellt die Statusleiste und zeigt eine Nachricht an."""
         self.statusBar().showMessage("Kein Modell geladen")
@@ -231,7 +241,6 @@ class MainWindow(QMainWindow):
         msg_box.exec()
         
 # =================================================================================================== 
-    """Funktionen für die Unterpunkte von view""" 
 
     def set_front_view(self):
         """Setzt die Kamera in die Frontansicht."""
@@ -242,7 +251,7 @@ class MainWindow(QMainWindow):
         self.widget.renderer.ResetCamera()  # Stellt sicher, dass das gesamte Modell sichtbar ist
         self.widget.GetRenderWindow().Render()  # Szene neu rendern
         
-    # ===================================================================================================  
+# ===================================================================================================  
 
     def set_top_view(self):
         """Setzt die Kamera in die Draufsicht."""
@@ -319,6 +328,10 @@ class MainWindow(QMainWindow):
         if not self.myModel:
             return
 
+        self.treeModel.clear() # Entferne alle aktuellen Knoten im Baum (leere den Baum)
+
+        self.treeModel.setHorizontalHeaderLabels(['Strukturbaum'])  # Setze die Header
+
         mbs_objects = self.myModel.get_mbs_object_list()  # Zugriff auf die Objektliste
 
         # Kategorien für die verschiedenen Objektarten
@@ -374,7 +387,6 @@ class MainWindow(QMainWindow):
         
         # Zeige das Menü an der Position des Rechtsklicks
         menu.exec_(self.treeView.mapToGlobal(pos))
-
 # ===================================================================================================  
 
     def rename_object(self, index):
@@ -387,33 +399,75 @@ class MainWindow(QMainWindow):
             obj = self.get_object_from_index(index)
             obj.parameter['name']['value'] = new_name  # Aktualisiere den Namen des Objekts im Modell
 
-            # Aktualisiere den Baum mit dem neuen Namen
-            index.model().dataChanged.emit(index, index)  # Signal, dass sich der Name geändert hat
+            # Hole das Modell, das mit dem Baum verbunden ist
+            item = self.treeModel.itemFromIndex(index)  # Hole das TreeView-Item für den ausgewählten Knoten
+
+            # Setze den neuen Namen im Strukturbaum
+            item.setText(new_name)
+
+            # Sende ein Signal, dass sich der Dateninhalt geändert hat
+            self.treeModel.dataChanged.emit(index, index)  # Signal an den Baum, dass sich die Daten geändert haben
 
 # ===================================================================================================  
 
     def show_properties(self, index):
         """Zeigt die Eigenschaften des Objekts an."""
-
-        mbs_objects = self.myModel.get_mbs_object_list()  # Zugriff auf die Objektliste
-
         obj = self.get_object_from_index(index)
         
-        # Eigenschaften des Objekts abrufen (z.B. Position und Masse)
-        position = obj.parameter.get('position', {}).get('value', 'Nicht gesetzt')
-        mass = obj.parameter.get('mass', {}).get('value', 'Nicht gesetzt')
+        if obj is None:
+            return
+        
+        obj_type = obj.getType()  # Den Typ des Objekts ermitteln
+        
+        if obj_type == "Body":
+            # Für "Body"-Objekte zeige den Schwerpunkt und Position an
+            position = obj.parameter.get('position', {}).get('value', 'Nicht gesetzt')
+            mass = obj.parameter.get('mass', {}).get('value', 'Nicht gesetzt')
 
-        # Erstelle die Nachricht, die die Eigenschaften anzeigt
-        properties_message = f"Position: {position}\nMasse: {mass}"
+            properties_message = f"Position: {position}\nMasse: {mass}" 
+            QMessageBox.information(self, "Eigenschaften", properties_message)  # Zeige die Eigenschaften in einer MessageBox an
 
-        # Zeige die Eigenschaften in einer MessageBox
-        QMessageBox.information(self, "Eigenschaften", properties_message)
+        elif obj_type == "Constraint":
+            # Für "Constraint"-Objekte zeige nur die Position an
+            position = obj.parameter.get('position', {}).get('value', 'Nicht gesetzt')
+            properties_message = f"Position: {position}"
+            QMessageBox.information(self, "Eigenschaften", properties_message)
+
+        elif obj_type == "Force":
+            # Für "Force"-Objekte zeige die Kraft und Position an
+            position = obj.parameter.get('position', {}).get('value', 'Nicht gesetzt')
+            force_value = obj.parameter.get('force', {}).get('value', 'Nicht gesetzt')
+            properties_message = f"Position: {position}\nKraft: {force_value}"
+            QMessageBox.information(self, "Eigenschaften", properties_message)
+
+        elif obj_type == "Measure":
+            # Für "Measure"-Objekte zeige die gemessene Größe an
+            measure_value = obj.parameter.get('value', {}).get('value', 'Nicht gesetzt')
+            properties_message = f"Messwert: {measure_value}"
+            QMessageBox.information(self, "Eigenschaften", properties_message)
+
+        else:
+            # Falls der Typ nicht erkannt wird, zeige eine allgemeine Nachricht an
+            properties_message = "Keine spezifischen Eigenschaften verfügbar."
+            QMessageBox.information(self, "Eigenschaften", properties_message)
 
 # ===================================================================================================  
 
     def get_object_from_index(self, index):
         """Holt das Modellobjekt basierend auf dem Index."""
-        # Wir gehen davon aus, dass jedes Baumobjekt eine Referenz auf das Modellobjekt enthält.
-        # Hier musst du den Index auf das tatsächliche Modellobjekt übersetzen.
-        # In diesem Fall gehe ich davon aus, dass du eine Methode wie 'get_mbs_object_list' hast.
-        return self.myModel.get_mbs_object_list()[index.row()]
+        # Der Baumindex entspricht einer Zeile in der Modell-Datenstruktur
+        if not index.isValid():
+            return None
+        
+        # Das Objekt im Modell (z. B. Body, Constraint, etc.) wird hier aus der Baumstruktur abgerufen.
+        item = self.treeModel.itemFromIndex(index)  # Hole das TreeView-Item für den ausgewählten Knoten
+        object_name = item.text()  # Holen den Namen des Objekts aus dem Baum (diese ist notwendig für das Objekt)
+        
+        # Gehe durch die Objektliste und finde das passende Objekt
+        for obj in self.myModel.get_mbs_object_list():
+            if obj.parameter.get('name', {}).get('value', '') == object_name:
+                return obj  # Gib das Objekt zurück, wenn der Name übereinstimmt
+        
+        return None
+
+
