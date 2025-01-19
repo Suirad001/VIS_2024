@@ -418,6 +418,7 @@ class MainWindow(QMainWindow):
             return
         
         obj_type = obj.getType()  # Den Typ des Objekts ermitteln
+        obj_subtype = obj.getSubType() # Den Subtype wird bestimmt 
         
         if obj_type == "Body":
             # Für "Body"-Objekte zeige den Schwerpunkt und Position an
@@ -435,10 +436,27 @@ class MainWindow(QMainWindow):
 
         elif obj_type == "Force":
             # Für "Force"-Objekte zeige die Kraft und Position an
-            position = obj.parameter.get('position', {}).get('value', 'Nicht gesetzt')
-            force_value = obj.parameter.get('force', {}).get('value', 'Nicht gesetzt')
-            properties_message = f"Position: {position}\nKraft: {force_value}"
-            QMessageBox.information(self, "Eigenschaften", properties_message)
+            if obj_subtype == "GenericForce":
+                point1 = obj.parameter.get('PointOfApplication_Body1', {}).get('value', 'Nicht gesetzt')
+                point2 = obj.parameter.get('PointOfApplication_Body2', {}).get('value', 'Nicht gesetzt')
+                force = obj.parameter.get('ForceExpression', {}).get('value', 'Nicht gesetzt')
+                properties_message = (
+                    f"PointOfApplication_Body1: {point1}\n" 
+                    f"PointOfApplication_Body1: {point2}\n"
+                    f"force: {force}\n")
+                QMessageBox.information(self, "Eigenschaften", properties_message)
+
+            elif obj_subtype == "GenericTorque":
+                body1 = obj.parameter.get('body1', {}).get('value', 'Nicht gesetzt')
+                body2 = obj.parameter.get('body2', {}).get('value', 'Nicht gesetzt')
+                direction = obj.parameter.get('direction', {}).get('value', 'Nicht gesetzt')
+                Torque = obj.parameter.get('TorqueExpression', {}).get('value', 'Nicht gesetzt')
+                properties_message = (
+                    f"Body 1: {body1}\n"
+                    f"Body 2: {body2}\n"
+                    f"Direction: {direction}\n"
+                    f"Torque Expression: {Torque}")
+                QMessageBox.information(self, "Eigenschaften", properties_message)
 
         elif obj_type == "Measure":
             # Für "Measure"-Objekte zeige die gemessene Größe an
