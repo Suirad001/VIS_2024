@@ -63,3 +63,5 @@ class rigidBody(body):
         transform = vtkTransform()
         transform.SetMatrix(vtk_matrix)
         bodyActor.SetUserTransform(transform)
+    
+ 

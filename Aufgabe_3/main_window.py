@@ -381,7 +381,7 @@ class MainWindow(QMainWindow):
         # Verknüpfe die Aktionen mit den Methoden
         rename_action.triggered.connect(lambda: self.rename_object(index))
         properties_action.triggered.connect(lambda: self.show_properties(index))
-        display_action.triggered.connect(lambda: self.highlight_body(index))
+        #display_action.triggered.connect(lambda: self.highlight_body(index))
 
         # Füge die Aktionen zum Menü hinzu
         menu.addAction(rename_action)
