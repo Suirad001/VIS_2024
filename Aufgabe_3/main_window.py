@@ -376,14 +376,17 @@ class MainWindow(QMainWindow):
         menu = QMenu(self.treeView)  # Erstelle das Kontextmenü
         rename_action = QAction("Umbennen", self)  # Aktion zum Umbennen
         properties_action = QAction("Eigenschaften", self)  # Aktion zum Anzeigen der Eigenschaften
+        display_action = QAction("Anzeigen", self)  # Aktion zum  hervorheben des Körpers
 
         # Verknüpfe die Aktionen mit den Methoden
         rename_action.triggered.connect(lambda: self.rename_object(index))
         properties_action.triggered.connect(lambda: self.show_properties(index))
+        display_action.triggered.connect(lambda: self.highlight_body(index))
 
         # Füge die Aktionen zum Menü hinzu
         menu.addAction(rename_action)
         menu.addAction(properties_action)
+        menu.addAction(display_action)
         
         # Zeige das Menü an der Position des Rechtsklicks
         menu.exec_(self.treeView.mapToGlobal(pos))
@@ -487,5 +490,6 @@ class MainWindow(QMainWindow):
                 return obj  # Gib das Objekt zurück, wenn der Name übereinstimmt
         
         return None
+# ====================================================================================================
 
 

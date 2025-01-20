@@ -24,7 +24,8 @@ class rigidBody(body):
                 "x_axis": {"type": "vector", "value": [1.,0.,0.]},
                 "y_axis": {"type": "vector", "value": [0.,1.,0.]},
                 "z_axis": {"type": "vector", "value": [0.,0.,1.]},
-                "color": {"type": "colorvector", "value": [0,0,0,0]}
+                "color": {"type": "colorvector", "value": [0,0,0,0]},
+                "transparency": {"type": "float", "value": 0.}
             }
 
             body.__init__(self,"Rigid_EulerParameter_PAI",text=kwargs["text"],parameter=parameter)
