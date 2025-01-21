@@ -94,6 +94,7 @@ class mbsObject:
     def show(self, renderer):
         for actor in self.actors:
             renderer.AddActor(actor)
+            
     def hide(self, renderer):
         for actor in self.actors:
             renderer.RemoveActor(actor)

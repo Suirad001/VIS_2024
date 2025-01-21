@@ -3,9 +3,9 @@ import mbsModel
 # Importiere Path, um mit Dateipfaden zu arbeiten
 from pathlib import Path
 # Importiere wichtige Klassen aus PySide6 (GUI-Komponenten)
-from PySide6.QtGui import QAction, QKeySequence, QStandardItemModel, QStandardItem
-from PySide6.QtWidgets import QMainWindow, QFileDialog, QStatusBar, QMessageBox, QMenu, QTreeView, QWidget, QHBoxLayout, QSplitter, QInputDialog
-from PySide6.QtCore import Qt, QRect
+from PySide6.QtGui import QAction, QStandardItemModel, QStandardItem, QGuiApplication
+from PySide6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QMenu, QTreeView, QWidget, QHBoxLayout, QSplitter, QInputDialog
+from PySide6.QtCore import Qt
 # Importiere das MainWidget für das Rendering
 from main_widget import MainWidget
 # Importiere den Renderer aus VTK
@@ -22,72 +22,57 @@ QVTKRenderWindowInteractor = QVTK.QVTKRenderWindowInteractor
 class MainWindow(QMainWindow):
     def __init__(self):
         """Initialisiert das Hauptfenster der Anwendung."""
-        super().__init__() # Ruft den Konstruktor der Elternklasse auf
+        super().__init__()  # Ruft den Konstruktor der Elternklasse auf
 
+        # --------------------- Initialisierung und Basiskonfiguration --------------------------------
         # Initialisiere das Modell
         self.myModel = None  # Anfangs kein Modell geladen
-
-        # Hauptfenster konfigurieren
         self.setWindowTitle("3D Modell in Qt mit VTK")  # Setze den Titel des Fensters
-        self.setGeometry(100, 100, 800, 600)  # Setze die Fenstergröße und Position
         
-        # Menüleiste erstellen
-        self.create_menu()
+        # Bildschirmgröße herauslesen
+        screen_geometry = QGuiApplication.primaryScreen().geometry()  # Bildschirmauflösung
+        screen_width = screen_geometry.width()
+        screen_height = screen_geometry.height()
 
-        # Statusleiste erstellen
-        self.create_status_bar()
+        # Berechne 70 % der Bildschirmgröße
+        window_width = int(screen_width * 0.7)
+        window_height = int(screen_height * 0.7)
+        # Setze die Größe und zentriere das Fenster
+        self.resize(window_width, window_height)
 
-        # VTK-Widget und -Renderer initialisieren
+
+        # --------------------- VTK-Widget -------------------------------------------------------------
         self.widget = MainWidget(self)  # Erstelle ein VTK-Widget
-        
-        # Setze den Hintergrund des Renderers auf Schwarz
         self.widget.renderer.SetBackground(0.0, 0.0, 0.0)  # Hintergrund für den Renderer auf Schwarz
 
-        # Layout für das Hauptfenster erstellen
-        main_layout = QHBoxLayout()
-
-        # QSplitter erstellen, um den Stammbaum und das VTK-Widget zu trennen
-        self.splitter = QSplitter(Qt.Horizontal)
-
-        # Erstelle und füge den Stammbaum hinzu
-        self.treeView = QTreeView(self)  # Erstelle das QTreeView-Widget
+        # --------------------- Strukturbaum -----------------------------------------------------------
         self.treeModel = QStandardItemModel()
-        self.treeModel.setHorizontalHeaderLabels(['Strukturbaum'])  # Setze die Header
-        self.treeView.setModel(self.treeModel)  # Setze das Modell für den Baum
+        self.treeModel.setHorizontalHeaderLabels(['Strukturbaum'])  # Header für den Baum
+        self.treeView = QTreeView(self)  # Erstelle das QTreeView-Widget
+        self.treeView.setModel(self.treeModel)  # Verknüpfe den Baum mit dem Modell
+        # Strukturbaum größe definieren
+        self.treeView.setMinimumWidth(80)  # Mindestbreite
+        self.treeView.setMaximumWidth(600)  # Maximale Breite
+        # Kontextmenü für den Strukturbaum aktivieren
+        self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)  # Kontextmenü aktivieren
+        self.treeView.customContextMenuRequested.connect(self.show_context_menu)  # Methode verknüpfen
 
-        # Füge das Kontextmenü für den Strukturbaum hinzu
-        self.treeView.setContextMenuPolicy(Qt.CustomContextMenu)  # Aktiviere Kontextmenü
-        self.treeView.customContextMenuRequested.connect(self.show_context_menu)  # Verknüpfe mit der Methode
+        # --------------------- Layout ----------------------------------------------------------------
+        splitter = QSplitter(Qt.Horizontal)
+        splitter.addWidget(self.treeView)  # Strukturbaum
+        splitter.addWidget(self.widget)  # VTK-Widget
+        splitter.setSizes([120, self.width() - 120])
 
-        # Füge die Strukturbaumdaten hinzu (dies muss nach dem Laden des Modells geschehen)
-        self.add_structure_tree()
-
-        # **Setze eine Startbreite von 100 Pixel für den Baum**
-        self.initial_tree_width = 100  # Startbreite für den Baum
-        
-        self.treeView.setMinimumWidth(80)  # Mindestbreite setzen
-        self.treeView.setMaximumWidth(600)  # Maximale Breite für den Baum (optional, anpassbar)
-
-        # Füge das TreeView und das VTK-Widget zum Splitter hinzu
-        self.splitter.addWidget(self.treeView)
-        self.splitter.addWidget(self.widget)
-
-        # Setze den Splitter so, dass der Baum eine Startbreite von 200 Pixel hat
-        self.splitter.setSizes([self.initial_tree_width, self.width() - self.initial_tree_width])
-
-        # Füge den Splitter zum Layout hinzu
-        main_layout.addWidget(self.splitter)
-
-        # Container erstellen und das Layout setzen
         container = QWidget(self)
-        container.setLayout(main_layout)
+        layout = QHBoxLayout(container)
+        layout.addWidget(splitter)
         self.setCentralWidget(container)
 
-        # Fenster anzeigen
-        self.setGeometry(100, 100, 1000, 600)
-        self.show()
+        # --------------------- GUI-Komponenten erstellen ----------------------------------------------
+        self.create_menu() # Menüleiste
+        self.statusBar().showMessage("Kein Modell geladen") # Statusleiste
 
-        # Initialisiere das RenderWindow
+        # --------------------- Rendering initialisieren ---------------------
         self.widget.GetRenderWindow().Render()
 
 # =======================================================================================================   
@@ -165,12 +150,6 @@ class MainWindow(QMainWindow):
         steuerung_menu.addAction(creo_action)
 
         settings_menu.addMenu(steuerung_menu)
-
-# ===================================================================================================  
- 
-    def create_status_bar(self):
-        """Erstellt die Statusleiste und zeigt eine Nachricht an."""
-        self.statusBar().showMessage("Kein Modell geladen")
 
 # ===================================================================================================  
 
@@ -272,38 +251,6 @@ class MainWindow(QMainWindow):
         camera.SetViewUp(0, 0, 1)  # Oben ist die Y-Achse
         self.widget.renderer.ResetCamera()  # Stellt sicher, dass das gesamte Modell sichtbar ist
         self.widget.GetRenderWindow().Render()  # Szene neu rendern
-
-# ===================================================================================================  
-
-    def open_control_settings(self):
-        """Öffnet die Steuerungseinstellungen und stellt die Interaktion wie in Creo ein."""
-        # Diese Methode aktiviert eine benutzerdefinierte Steuerung wie in Creo
-        self.set_creo_mouse_interaction()
-
-# ===================================================================================================  
-
-    def set_creo_mouse_interaction(self):
-        """Aktiviert die Creo-ähnliche Mausinteraktion."""
-        # In Creo wird normalerweise folgendermaßen interagiert:
-        # - Linksklick: Drehung der Ansicht
-        # - Rechtsklick: Zoom
-        # - Mittlere Maustaste oder Shift + Mausklick: Pan
-        
-        # Setze den Interactor auf eine benutzerdefinierte Steuerung (falls nötig)
-        self.widget.SetInteractorStyle(self.create_creo_interaction_style())
-
-# ===================================================================================================  
-
-    def create_creo_interaction_style(self):
-        """Erstellt eine benutzerdefinierte Interaktionsweise wie in Creo."""
-        # Hier könntest du mit VTKs "vtkInteractorStyle" arbeiten, um eine benutzerdefinierte Steuerung zu definieren
-        # VTK bietet mehrere Interaktionsstile, die du überschreiben kannst, wie z.B. vtkInteractorStyleTrackballCamera,
-        # das das Drehen und Zoomen eines Modells ermöglicht.
-        interactor_style = vtk.vtkInteractorStyleTrackballCamera()
-
-        # Stelle sicher, dass der Interactor die Maus so behandelt, wie in Creo:
-        interactor_style.SetMouseWheelMotionFactor(0.1)  # Geschwindigkeit des Zoomens
-        return interactor_style
 
 # ===================================================================================================  
 
@@ -445,7 +392,7 @@ class MainWindow(QMainWindow):
                 force = obj.parameter.get('ForceExpression', {}).get('value', 'Nicht gesetzt')
                 properties_message = (
                     f"PointOfApplication_Body1: {point1}\n" 
-                    f"PointOfApplication_Body1: {point2}\n"
+                    f"PointOfApplication_Body2: {point2}\n"
                     f"force: {force}\n")
                 QMessageBox.information(self, "Eigenschaften", properties_message)
 
@@ -491,5 +438,4 @@ class MainWindow(QMainWindow):
         
         return None
 # ====================================================================================================
-
 
