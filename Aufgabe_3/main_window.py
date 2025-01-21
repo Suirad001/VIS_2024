@@ -8,11 +8,8 @@ from PySide6.QtWidgets import QMainWindow, QFileDialog, QMessageBox, QMenu, QTre
 from PySide6.QtCore import Qt
 # Importiere das MainWidget für das Rendering
 from main_widget import MainWidget
-# Importiere den Renderer aus VTK
-from vtkmodules.vtkRenderingCore import vtkRenderer
 # Importiere QVTKRenderWindowInteractor für die Interaktion mit dem VTK-Renderfenster
 import QVTKRenderWindowInteractor as QVTK
-import vtk
 
 # Alias für das QVTKRenderWindowInteractor-Modul
 QVTKRenderWindowInteractor = QVTK.QVTKRenderWindowInteractor
