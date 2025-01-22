@@ -22,8 +22,6 @@ class MainWindow(QMainWindow):
         super().__init__()  # Ruft den Konstruktor der Elternklasse auf
 
         # --------------------- Initialisierung und Basiskonfiguration --------------------------------
-        # Initialisiere das Modell
-        self.myModel = None  # Anfangs kein Modell geladen
         self.setWindowTitle("3D Modell in Qt mit VTK")  # Setze den Titel des Fensters
         
         # Bildschirmgröße herauslesen
@@ -34,7 +32,7 @@ class MainWindow(QMainWindow):
         # Berechne 70 % der Bildschirmgröße
         window_width = int(screen_width * 0.7)
         window_height = int(screen_height * 0.7)
-        # Setze die Größe und zentriere das Fenster
+        # Setze die Größe des Fensters
         self.resize(window_width, window_height)
 
 
@@ -152,8 +150,8 @@ class MainWindow(QMainWindow):
 
     def load_model(self):
         """Lädt ein Modell aus einer JSON-Datei."""
-        options = QFileDialog.Options()
-        filename, _ = QFileDialog.getOpenFileName(self, "Open json File", "", "JSON and FDD Files (*.json *.fdd)", options=options) # Filter gleich nach fdd und json datein
+        #options = QFileDialog.Options() Wird benötigt wenn man beispielsweise Mehrfachauswahl integrieren möchte
+        filename, _ = QFileDialog.getOpenFileName(self, "Open json File", "", "JSON and FDD Files (*.json *.fdd)") # Filter gleich nach fdd und json datein
         
         if filename:
             if filename.lower().endswith(".json"):  # Überprüfe, ob die Datei eine JSON-Datei ist
@@ -177,8 +175,8 @@ class MainWindow(QMainWindow):
 
     def import_fdd(self):
         """Importiert ein FDD-Modell aus einer Datei."""
-        options = QFileDialog.Options()
-        filename, _ = QFileDialog.getOpenFileName(self, "Import FDD File", "", "JSON and FDD Files (*.json *.fdd)", options=options) # Filter gleich nach fdd und json datein
+        # options = QFileDialog.Options() Wird benötigt wenn man beispielsweise Mehrfachauswahl integrieren möchte
+        filename, _ = QFileDialog.getOpenFileName(self, "Import FDD File", "", "JSON and FDD Files (*.json *.fdd)") #, options=options) # Filter gleich nach fdd und json datein
 
         if filename:
             if filename.lower().endswith(".fdd"):  # Überprüfe, ob die Datei eine Fdd-Datei ist
@@ -200,8 +198,8 @@ class MainWindow(QMainWindow):
 
     def save_model(self):
         """Speichert das Modell in einer JSON-Datei."""
-        options = QFileDialog.Options()
-        filename, _ = QFileDialog.getSaveFileName(self, "Save Model File", "", "JSON Files (*.json)", options=options)
+        #options = QFileDialog.Options()
+        filename, _ = QFileDialog.getSaveFileName(self, "Save Model File", "", "JSON Files (*.json)") #, options=options)
         if filename:
             self.myModel.saveDatabase(Path(filename))  # Speichert das Modell
             self.statusBar().showMessage(f"Modell gespeichert: {filename}")
@@ -426,7 +424,7 @@ class MainWindow(QMainWindow):
         
         # Das Objekt im Modell (z. B. Body, Constraint, etc.) wird hier aus der Baumstruktur abgerufen.
         item = self.treeModel.itemFromIndex(index)  # Hole das TreeView-Item für den ausgewählten Knoten
-        object_name = item.text()  # Holen den Namen des Objekts aus dem Baum (diese ist notwendig für das Objekt)
+        object_name = item.text()  # Holen den Namen des Objekts aus dem Baum 
         
         # Gehe durch die Objektliste und finde das passende Objekt
         for obj in self.myModel.get_mbs_object_list():
