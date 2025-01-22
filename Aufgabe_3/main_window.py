@@ -350,9 +350,6 @@ class MainWindow(QMainWindow):
             # Setze den neuen Namen im Strukturbaum
             item.setText(new_name)
 
-            # Sende ein Signal, dass sich der Dateninhalt geändert hat
-            self.treeModel.dataChanged.emit(index, index)  # Signal an den Baum, dass sich die Daten geändert haben
-
 # ===================================================================================================  
 
     def show_properties(self, index):
